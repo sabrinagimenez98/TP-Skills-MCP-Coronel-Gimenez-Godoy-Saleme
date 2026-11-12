@@ -386,7 +386,7 @@ Paso │ Agente A (Backend Core) │ Agente B (Backend Aux)  │ Agente C (Diner
 ## FASE 5 — Transversal
 
 ### [C-14] `auditoria-exportacion`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[~]` preparado, no implementado — change `c-14-auditoria-exportacion` creado con el CLI en `openspec/changes/c-14-auditoria-exportacion/` (proposal, design, `specs/auditoria-exportacion/spec.md` con 17 escenarios y 16 tareas sin marcar; `openspec validate --strict` OK; planning 4/4). Preparado con la skill propia `export-sin-phi` y docs de Context7 — evidencias en `docs/skills-mcp/evidencias/03-*` y `04-*`. **Cero tareas verificadas: pendiente de implementación vía `/opsx:apply`.**
 - **Scope**: Trail consultable + exportación 1-clic + página legal (Flujo 7)
   - `GET /api/auditoria` (filtros entidad/período/actor, solo Dueño) sobre tabla append-only
   - Exportación CSV/JSON de agenda, pacientes, caja, liquidaciones en 1 clic; job asíncrono con descarga si el volumen es grande
