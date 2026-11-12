@@ -25,6 +25,7 @@ Project: turnos-odontologia — SaaS multi-tenant odontológico (FastAPI + SQLAl
 | EMR/EHR features: encounter workflows, prescriptions, clinical data entry UI (plantilla para HC + odontograma FDI C-05) | healthcare-emr-patterns | .agents/skills/healthcare-emr-patterns/SKILL.md |
 | PHI handling, covered entities, BAAs, minimum-necessary, auditabilidad (base para Ley 25.326 + HCE AR) | hipaa-compliance | .agents/skills/hipaa-compliance/SKILL.md |
 | Optimized multi-stage Dockerfiles, any language/framework (foundation C-01) | multi-stage-dockerfile | .agents/skills/multi-stage-dockerfile/SKILL.md |
+| Exportación/descarga CSV/JSON de datos del consultorio (agenda, pacientes, caja, liquidaciones, auditoría): endpoint en servidor + batería de tests sin PHI bajo RBAC (C-14 primero) | export-sin-phi | .agents/skills/export-sin-phi/SKILL.md |
 
 ## Compact Rules
 
@@ -146,6 +147,15 @@ Pre-digested rules per skill. Delegators copy matching blocks into sub-agent pro
 - Seguridad: nunca root (`USER` no-root); sin build-tools/secretos en imagen final; permisos restrictivos; escanea vulnerabilidades
 - Prod: `NODE_ENV=production`, `HEALTHCHECK` por tipo de app, build-args para config entre entornos, aprovecha caché ordenando de menos a más cambiante
 
+### export-sin-phi (exportación 1-clic Dueño + auditoría — C-14)
+- Archivo CSV/JSON armado SIEMPRE en backend desde la query (R8); el cliente solo manda `?formato=csv|json` — nada de montos/columnas calculados en frontend
+- Formato patrón (C-13/D7): CSV UTF-8 con BOM, separador `,`, decimal `.`, quoting RFC 4180; JSON con `Decimal` como string; `Content-Disposition: attachment`
+- `tenant_id` y actor SOLO del token JWT (R4); permiso `EXPORTAR` explícito en la matriz RBAC — rol sin permiso `403`, otro tenant `404`, formato inválido `422`
+- Columnas = exactamente las de la spec (RN-SE-02 mínimo necesario); sin DNI/teléfono/ni datos clínicos en archivo, logs, URLs ni filename cuando la spec no los declara (R9)
+- Cada descarga INSERTA fila `accion=EXPORTAR` en `auditoria`; la auditoría es append-only sin UPDATE/DELETE (RN-SE-01, KB04 §Auditoria); export voluminoso → job asíncrono identificado por ID interno (Flujo 7)
+- Batería por entidad contra DB real (R11): tenant aislado + cero PHI + RBAC `403` + formato + R8 (valores = DB) + fila de auditoría; mínimo 2 casos por comportamiento, fixtures sintéticos (R13) — copiar estructura de `tests/test_liquidaciones_export.py`
+- C-14 es "sin migración (lee tablas existentes)" — si hiciste migración, desviaste la spec; levantar en review
+
 ## Change → Skills (delegación rápida)
 
 | Change | Skills a inyectar |
@@ -155,6 +165,7 @@ Pre-digested rules per skill. Delegators copy matching blocks into sub-agent pro
 | C-03 auth JWT + RBAC | auth-implementation-patterns, python-fastapi-development, supabase-postgres-best-practices (RLS), tdd, code-review |
 | C-05 HC + odontograma | healthcare-emr-patterns, hipaa-compliance, frontend-design, supabase-postgres-best-practices, tdd |
 | C-07 pagos Mercado Pago | stripe-integration (plantilla), clerk-webhooks (patrón webhook), python-fastapi-development, upstash-redis-js (colas), tdd, code-review |
+| C-14 auditoría/exportación | export-sin-phi, hipaa-compliance (R9 mínimo necesario), supabase-postgres-best-practices (audit trail append-only), python-fastapi-development, tdd, code-review |
 | Agenda/turnos + anti-solapamiento | supabase-postgres-best-practices (exclusión), upstash-redis-js (lista espera), tdd |
 | WhatsApp confirmación/recordatorios | observe-whatsapp, upstash-redis-js (colas/retry), hipaa-compliance (opt-in/log), tdd |
 | PWA paciente / pantallas recep. | vercel-react-best-practices, frontend-design, tdd |

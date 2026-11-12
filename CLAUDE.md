@@ -40,7 +40,7 @@ Fuente de verdad del dominio. Leer antes de proponer o implementar:
 | Agente | Rol | Skills que carga |
 |--------|-----|------------------|
 | Backend Core | FastAPI + modelos multi-tenant | `python-fastapi-development`, `supabase-postgres-best-practices`, `tdd` |
-| Backend Aux | Auth, pagos, mensajería, auditoría | `auth-implementation-patterns`, `stripe-integration` (plantilla MP), `clerk-webhooks` (patrón webhook), `upstash-redis-js`, `hipaa-compliance`, `tdd`, `code-review` |
+| Backend Aux | Auth, pagos, mensajería, auditoría | `auth-implementation-patterns`, `stripe-integration` (plantilla MP), `clerk-webhooks` (patrón webhook), `upstash-redis-js`, `hipaa-compliance`, `export-sin-phi`, `tdd`, `code-review` |
 | Frontend | PWA paciente + agenda/HC | `vercel-react-best-practices`, `frontend-design`, `tdd` |
 | Clínico | HC + odontograma FDI | `healthcare-emr-patterns`, `hipaa-compliance`, `frontend-design` |
 | Infra | Docker + foundation | `multi-stage-dockerfile`, `python-fastapi-development` |
@@ -48,6 +48,16 @@ Fuente de verdad del dominio. Leer antes de proponer o implementar:
 | Calidad | Reviews HIGH/CRITICAL | `code-review` |
 
 > Los compact rules de cada skill los resuelve el orquestador desde `.agents/skill-registry.md` (versionado en el repo, junto a las skills en `.agents/skills/`).
+>
+> **`export-sin-phi`** (propia): se carga en **Backend Aux** para toda tarea de exportación/descarga CSV/JSON o auditoría consultable (C-14 primero, "bajar un CSV", "exportar en 1 clic"). Necesita la spec del change en `openspec/`, la KB (`04` §Auditoria, `05` RN-SE-01/02, `07` Flujo 7) y el patrón de referencia `tests/test_liquidaciones_export.py`. El resultado se revisa con `code-review` (ejes Standards/Spec) + el checklist de la skill: cero PHI en archivo/logs/URLs, columnas mínimas declaradas, `tenant_id` solo del token, nada calculado en cliente, fila `EXPORTAR` en `auditoría`, ≥2 tests por comportamiento contra DB real.
+
+## Integración MCP (Context7)
+
+Servidor MCP remoto configurado en `opencode.json` (`mcp.servers.context7` → `https://mcp.context7.com/mcp`, sin secretos). **No es una skill**: es una integración que da acceso a documentación externa.
+
+- **Propósito**: consultar documentación oficial y **versionada** de librerías del stack (FastAPI, SQLAlchemy, Pydantic, React/Vite/PWA, pytest, Alembic) con las herramientas de solo lectura `resolve-library-id` y `query-docs`.
+- **Cuándo usarlo**: cuando haya que implementar o revisar código cuya API dependa de esas librerías y el conocimiento de entrenamiento pueda estar desactualizado — p. ej. preparar/implementar C-14 (`StreamingResponse`/`Response` para los exports). No reempla leer la KB ni las specs del change: primero spec/KB, luego Context7 para la API puntual.
+- **Límites**: las queries salen a un servicio externo → **nunca** enviar PHI, DNI, teléfonos, montos ni datos de pacientes (R9/R13); solo nombres de librería y tema. La API key opcional va en variable de entorno, jamás en el repo (R10). Detalle de configuración, comprobación y troubleshooting en `README.md`; evidencias en `docs/skills-mcp/evidencias/`.
 
 ## Roadmap de Changes
 
