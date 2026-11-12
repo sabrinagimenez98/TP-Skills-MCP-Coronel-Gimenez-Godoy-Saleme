@@ -1,0 +1,11 @@
+﻿Comprobacion de conexion del MCP Context7 en la carpeta del TP (opencode mcp list)
+Fecha: 2026-11-12
+Ôöî  MCP Servers
+Ôöé
+ÔùÅ  Ô£ô context7 connected
+Ôöé      https://mcp.context7.com/mcp
+Ôöé
+ÔùÅ  Ô£ô engram connected
+Ôöé      engram mcp
+Ôöé
+Ôöö  2 server(s)
